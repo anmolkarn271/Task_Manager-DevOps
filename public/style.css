@@ -1,0 +1,130 @@
+{
+box-sizing: border-box;
+}
+
+body {
+margin: 0;
+background: #f7f5f0;
+color: #332c26;
+font-family: Arial, sans-serif;
+}
+
+.container {
+width: min(620px, 92%);
+margin: 90px auto;
+padding: 42px;
+background: #fffefa;
+border: 1px solid #e9e2d8;
+border-radius: 12px;
+}
+
+.eyebrow, .summary span {
+color: #8a7159;
+font-size: 11px;
+letter-spacing: 2px;
+}
+
+h1 {
+margin: 16px 0 8px;
+font-size: 42px;
+}
+
+h1 span {
+color: #9b7553;
+}
+
+.subtitle {
+color: #887f75;
+margin-bottom: 32px;
+}
+
+form {
+display: flex;
+gap: 10px;
+}
+
+input {
+min-width: 0;
+flex: 1;
+padding: 14px;
+border: 1px solid #ded5ca;
+border-radius: 6px;
+background: white;
+}
+
+button {
+padding: 14px 18px;
+background: #624b37;
+color: white;
+border: 0;
+border-radius: 6px;
+cursor: pointer;
+}
+
+.summary {
+display: flex;
+justify-content: space-between;
+margin-top: 32px;
+padding-bottom: 14px;
+border-bottom: 1px solid #eee7de;
+font-size: 13px;
+}
+
+#task-list {
+padding: 0;
+list-style: none;
+}
+
+#task-list li {
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 12px;
+padding: 14px 0;
+border-bottom: 1px solid #f0ebe4;
+overflow-wrap: anywhere;
+}
+
+#task-list li.done .task-title {
+text-decoration: line-through;
+color: #9a938a;
+}
+
+.actions {
+display: flex;
+gap: 6px;
+flex-shrink: 0;
+}
+
+.actions button {
+padding: 8px 10px;
+font-size: 12px;
+}
+
+.delete {
+background: #eee7de;
+color: #624b37;
+}
+
+.footer {
+margin-top: 30px;
+color: #9a9085;
+text-align: center;
+font-size: 12px;
+}
+
+@media (max-width: 480px) {
+.container {
+margin: 30px auto;
+padding: 24px 18px;
+}
+
+h1 {
+    font-size: 34px;
+}
+
+form {
+    flex-direction: column;
+}
+
+}
