@@ -1,18 +1,21 @@
 {
+  "name": "devops-task-manager",
+  "version": "1.0.0",
+  "description": "Dockerized Node.js Task Manager deployed using AWS EC2 and GitHub Actions",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --check server.js"
+  },
   "dependencies": {
     "express": "^5.3.0"
   },
-  "name": "devops-task-manager",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "script": {
-    "start": "node server.js"
-  }
+  "keywords": [
+    "nodejs",
+    "docker",
+    "devops",
+    "aws",
+    "ci-cd"
+  ],
+  "license": "ISC"
 }
