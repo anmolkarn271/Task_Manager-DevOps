@@ -4,33 +4,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karya Prabandhak</title>
-    <link rel="stylesheet" href="/style.css">
+
+```
+<meta name="theme-color" content="#f7f5f0">
+<meta name="description" content="A clean, focused workspace to organize your daily tasks.">
+
+<title>Karya — Task Manager</title>
+<link rel="stylesheet" href="/style.css">
+```
+
 </head>
+
 <body>
+    <div class="app-shell">
+
+```
+    <header class="topbar">
+        <a class="brand" href="/" aria-label="Karya home">
+            <span class="brand-mark">K</span>
+            <span>karya<span class="brand-period">.</span></span>
+        </a>
+
+        <div class="topbar-label">
+            <span class="status-dot"></span>
+            PERSONAL WORKSPACE
+        </div>
+    </header>
+
     <main class="container">
-        <p class="eyebrow">PERSONAL WORKSPACE</p>
-        <h1>Task Manager<span>.</span></h1>
-        <p class="subtitle">A little progress every day.</p>
 
+        <section class="hero">
+            <p class="eyebrow">YOUR SPACE TO FOCUS</p>
 
-    <form id="task-form">
-        <input id="task-input" type="text"
-               placeholder="What needs to get done?" required>
-        <button type="submit">Add task +</button>
-    </form>
+            <h1>Make room for<br>
+                <span>what matters.</span>
+            </h1>
 
-    <div class="summary">
-        <span id="task-count">0 tasks</span>
-        <span>YOUR DAILY LIST</span>
-    </div>
+            <p class="subtitle">
+                Small steps. Consistent progress. One task at a time.
+            </p>
+        </section>
 
-    <ul id="task-list"></ul>
-    <p class="footer">Stay focused. Keep building.</p>
-</main>
+        <section class="task-panel" aria-labelledby="tasks-heading">
 
-<script src="/script.js"></script>
+            <div class="panel-heading">
+                <div>
+                    <p class="section-label">YOUR WORKSPACE</p>
+                    <h2 id="tasks-heading">Today's tasks</h2>
+                </div>
 
+                <span class="date-badge">DAILY LIST</span>
+            </div>
+
+            <form id="task-form">
+                <label class="sr-only" for="task-input">New task</label>
+
+                <input
+                    id="task-input"
+                    type="text"
+                    placeholder="What would you like to accomplish?"
+                    maxlength="200"
+                    autocomplete="off"
+                    required
+                >
+
+                <button type="submit" id="add-task-button">
+                    <span>Add task</span>
+                    <span aria-hidden="true">+</span>
+                </button>
+            </form>
+
+            <div class="summary">
+                <div>
+                    <span class="summary-number" id="task-count">0 tasks</span>
+                    <span class="summary-caption">in your list</span>
+                </div>
+
+                <span class="summary-note">PROGRESS OVER PERFECTION</span>
+            </div>
+
+            <ul id="task-list" aria-live="polite"></ul>
+
+            <div class="empty-state" id="empty-state" hidden>
+                <div class="empty-icon">✳</div>
+                <h3>A fresh start.</h3>
+                <p>Add your first task and make today count.</p>
+            </div>
+
+        </section>
+
+        <footer class="footer">
+            <span>Designed for a little more clarity.</span>
+            <span class="footer-brand">KARYA © 2026</span>
+        </footer>
+
+    </main>
+</div>
+
+<script src="/script.js" defer></script>
+```
 
 </body>
 </html>
