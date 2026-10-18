@@ -2,7 +2,7 @@ name: Task Manager CI/CD
 
 on:
   push:
-    branch:
+    branches:
       - main
 
   workflow_dispatch:
@@ -19,22 +19,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: checkout source code
+      - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: set up node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
 
-      - name: Install depandencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: check JavaScript Syntax
+      - name: Test JavaScript syntax
         run: npm test
 
-      - name: set up Docker Builder
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
@@ -43,7 +43,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: build and push docker image
+      - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -52,63 +52,101 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/devops-task-manager:${{ github.sha }}
             ${{ secrets.DOCKERHUB_USERNAME }}/devops-task-manager:latest
 
-     - name: Configure SSH
-       env:
-         EC2_HOST: ${{ secrets.EC2_HOST }}
-         EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-       run: |
-        mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
-        printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy_key
-        chmod 600 ~/.ssh/deploy_key
-        ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
-        chmod 600 ~/.ssh/known_hosts
+      - name: Configure SSH
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          set -eu
 
-    - name: Deploy to EC2
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-        EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        ssh -i ~/.ssh/deploy_key \
-          -o BatchMode=yes \
-          -o StrictHostKeyChecking=yes \
-          "$EC2_USERNAME@EC2HOST" \
-          "DOCKERHUB_USERNAME='$DOCKERHUB_USERNAME' IMAGE_TAG='$IMAGE_TAG' bash -s" <<'REMOTE'
-        set -eu
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
 
-        IMAGE="%DOCKERHUB_USERNAME/devops-task-manager:$IMAGE_TAG"
-        CONTAINER="task-manager"
-        volume="task-manager-data"
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
 
-        docker pull "$IMAGE"
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
-        docker volume inspect "$VOLUME" >/dev/null
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -eu
 
-        docker run -d \
-        --name task-manager-next \
-        --restart unless-stopped \
-        -p 127.0.0.1:3001:3000 \
-        -v "$VOLUME:/app/data" \
-        "$IMAGE"
+          IMAGE="${DOCKERHUB_USERNAME}/devops-task-manager:${IMAGE_TAG}"
 
-        HEALTHY=0
+          ssh \
+            -i ~/.ssh/deploy_key \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "${EC2_USERNAME}@${EC2_HOST}" \
+            "IMAGE='${IMAGE}' bash -s" <<'REMOTE'
 
-         for i in $(seq 1 20); do
-            if curl --fail --silent http://127.0.0.1:3001/health >/dev/null; then
+          set -eu
+
+          CONTAINER="task-manager"
+          VOLUME="task-manager-data"
+
+          # Save the current image for rollback.
+          OLD_IMAGE=$(docker inspect \
+            --format='{{.Config.Image}}' \
+            "$CONTAINER" 2>/dev/null || true)
+
+          # Download the new image.
+          docker pull "$IMAGE"
+
+          # Ensure application data volume exists.
+          docker volume create "$VOLUME" >/dev/null
+
+          # Replace the old application container.
+          docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+
+          docker run -d \
+            --name "$CONTAINER" \
+            --restart unless-stopped \
+            -p 3000:3000 \
+            -v "$VOLUME:/app/data" \
+            "$IMAGE"
+
+          # Check application health.
+          HEALTHY=0
+
+          for i in $(seq 1 20); do
+            if curl --fail --silent \
+              http://127.0.0.1:3000/api/health >/dev/null; then
               HEALTHY=1
               break
             fi
+
             sleep 3
           done
 
           if [ "$HEALTHY" -ne 1 ]; then
-            docker logs task-manager-next || true
-            docker rm -f task-manager-next || true
+            echo "Deployment health check failed."
+
+            docker logs "$CONTAINER" || true
+            docker rm -f "$CONTAINER" || true
+
+            # Attempt to restore the previous image.
+            if [ -n "$OLD_IMAGE" ]; then
+              echo "Attempting rollback to $OLD_IMAGE"
+
+              docker run -d \
+                --name "$CONTAINER" \
+                --restart unless-stopped \
+                -p 3000:3000 \
+                -v "$VOLUME:/app/data" \
+                "$OLD_IMAGE"
+            fi
+
             exit 1
           fi
 
-          echo "New container passed the health check."
-          REMOTE
+          echo "Deployment successful!"
+          echo "Application health check passed."
 
+          REMOTE
