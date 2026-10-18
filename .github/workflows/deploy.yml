@@ -59,6 +59,16 @@ jobs:
         run: |
           set -eu
 
+          if [ -z "$EC2_HOST" ]; then
+            echo "ERROR: EC2_HOST secret is missing or empty."
+            exit 1
+          fi
+
+          if [ -z "$EC2_SSH_KEY" ]; then
+            echo "ERROR: EC2_SSH_KEY secret is missing or empty."
+            exit 1
+          fi
+
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
